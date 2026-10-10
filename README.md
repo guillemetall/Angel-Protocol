@@ -1,213 +1,215 @@
-# Xiaomesh - Firmware Mesh BLE Coded PHY S8
+**English** | [Espanol](README.es.md)
 
-Firmware para Seeed Studio XIAO ESP32-C6 que actua como nodo de una red de mensajeria mesh offline. Usa Bluetooth LE Coded PHY S8 para alcance extendido (200-500 m por salto) sin depender de internet, torres celulares, Wi-Fi ni LoRa.
+# Xiaomesh - Mesh Firmware BLE Coded PHY S8
+
+Firmware for **Seeed Studio XIAO ESP32-C6** that acts as a node in an offline mesh messaging network. Uses **Bluetooth LE Coded PHY S8** for extended range (200-500 m per hop) without depending on internet, cell towers, Wi-Fi, or LoRa.
 
 Copyright (C) 2026 guillemetall
-Licencia: GNU General Public License v3.0 o posterior. Ver archivo LICENSE.
+License: GNU General Public License v3.0 or later. See LICENSE file.
 
-## Caracteristicas
+## Features
 
-- Coded PHY S8 para alcance extendido (200-500 m por salto).
-- Extended Advertising dual: instancia conectable en 1M PHY (telefonos) y no conectable en Coded PHY (malla).
-- Extended Scanning dual: escucha simultanea en 1M y Coded PHY S8.
-- Enrutamiento hibrido: flooding para descubrir rutas, directo para comunicar.
-- Score compuesto (RSSI 40%, PDR 30%, bateria 10%, saltos 20%).
-- Conmutacion adaptativa de PHY (1M / 2M / S8) con histeresis y contadores.
-- Cifrado AES-128-GCM de todos los payloads con mbedTLS.
-- Fragmentacion y reensamblado de mensajes largos (hasta 8 fragmentos).
-- Deduplicacion FNV-1a con cache de 32 hashes.
-- ACKs acumulativos con bitmap de 32 bits.
-- Batching de mensajes cortos.
-- Room server (buzon de mensajes para nodos desconectados).
-- Bridge para iPhone, Android antiguo o PC sin adaptador BLE 5.0.
-- Control de congestion por airtime medido.
-- Rotacion de IDs cada 10 minutos para privacidad.
-- OTA con verificacion SHA-256 (por BLE o Wi-Fi).
-- Modo recuperacion por GPIO para rescatar la placa sin PC.
-- Gestion solar y bateria con deep sleep por timer o GPIO.
+- Coded PHY S8 for extended range (200-500 m per hop).
+- Dual Extended Advertising: connectable instance on 1M PHY (phones) and non-connectable on Coded PHY (mesh).
+- Dual Extended Scanning: simultaneous listening on 1M and Coded PHY S8.
+- Hybrid routing: flooding for route discovery, direct for communication.
+- Composite score (RSSI 40%, PDR 30%, battery 10%, hops 20%).
+- Adaptive PHY switching (1M / 2M / S8) with hysteresis and counters.
+- AES-128-GCM encryption of all payloads with mbedTLS.
+- Fragmentation and reassembly of long messages (up to 8 fragments).
+- FNV-1a deduplication with 32-hash cache.
+- Cumulative ACKs with 32-bit bitmap.
+- Batching of short messages.
+- Room server (mailbox for disconnected nodes).
+- Bridge for iPhone, old Android, or PC without BLE 5.0 adapter.
+- Congestion control by measured airtime.
+- ID rotation every 10 minutes for privacy.
+- OTA with SHA-256 verification (via BLE or Wi-Fi).
+- Recovery mode via GPIO to rescue the board without PC.
+- Solar and battery management with timer or GPIO deep sleep.
 
 ## Hardware
 
-| Componente | Modelo |
-|------------|--------|
-| Placa principal | Seeed Studio XIAO ESP32-C6 |
-| Antena | Externa U.FL 2.4 GHz (2.8 dBi o mayor) |
-| Energia | Panel solar 5-10 W + bateria LiPo 2000-5000 mAh |
-| Carga | Controlador TP4056 o similar |
-| Conexion | Cable USB-C para programacion |
+| Component | Model |
+|-----------|-------|
+| Main board | Seeed Studio XIAO ESP32-C6 |
+| Antenna | External U.FL 2.4 GHz (2.8 dBi or higher) |
+| Power | Solar panel 5-10 W + LiPo battery 2000-5000 mAh |
+| Charging | TP4056 controller or similar |
+| Connection | USB-C cable for programming |
 
-### Pines usados
+### Pins used
 
-| GPIO | Funcion |
-|------|---------|
-| GPIO15 | LED azul de estado |
-| GPIO3 | Conmutador de antena (LOW = habilitado) |
-| GPIO14 | Seleccion de antena (HIGH = externa U.FL) |
-| GPIO9 | Modo recuperacion (LOW al arrancar) |
-| GPIO0 | ADC bateria |
-| GPIO1 | ADC panel solar |
-| GPIO2 | Wakeup GPIO desde deep sleep |
+| GPIO | Function |
+|------|----------|
+| GPIO15 | Blue status LED |
+| GPIO3 | Antenna switch (LOW = enabled) |
+| GPIO14 | Antenna select (HIGH = external U.FL) |
+| GPIO9 | Recovery mode (LOW at boot) |
+| GPIO0 | Battery ADC |
+| GPIO1 | Solar panel ADC |
+| GPIO2 | Wakeup GPIO from deep sleep |
 
-## Estructura del proyecto
+## Project structure
 
-main/config.h - Constantes y configuracion
-main/app_main.c - Punto de entrada y bucle principal
-main/antenna.c - Seleccion de antena U.FL
-main/power_manager.c - ADC bateria/panel + deep sleep
-main/ota_manager.c - OTA por BLE/WiFi + modo recuperacion
-main/ble_manager.c - Advertising y scanning dual (1M + S8)
-main/gatt_server.c - Servidor GATT (config, mensajes, OTA, status)
-main/protocol.c - Formato de paquete + enrutamiento + tabla vecinos
-main/phy_manager.c - Conmutacion adaptativa 1M / 2M / S8
-main/fragment.c - Fragmentacion y reensamblado
-main/dedup.c - Deduplicacion FNV-1a
-main/ack_manager.c - ACKs acumulativos
-main/batch.c - Batching de mensajes cortos
-main/congestion.c - Control de airtime
-main/room.c - Room server (buzon)
-main/crypto.c - Cifrado AES-128-GCM
-main/bridge.c - Bridge 1M <-> S8 para clientes
-main/id_rotation.c - Rotacion de IDs cada 10 minutos
-main/uart_config.c - Comandos por UART
+main/config.h - Constants and configuration
+main/app_main.c - Entry point and main loop
+main/antenna.c - U.FL antenna selection
+main/power_manager.c - Battery/panel ADC + deep sleep
+main/ota_manager.c - OTA via BLE/WiFi + recovery mode
+main/ble_manager.c - Dual advertising and scanning (1M + S8)
+main/gatt_server.c - GATT server (config, messages, OTA, status)
+main/protocol.c - Packet format + routing + neighbor table
+main/phy_manager.c - Adaptive switching 1M / 2M / S8
+main/fragment.c - Fragmentation and reassembly
+main/dedup.c - FNV-1a deduplication
+main/ack_manager.c - Cumulative ACKs
+main/batch.c - Batching of short messages
+main/congestion.c - Airtime control
+main/room.c - Room server (mailbox)
+main/crypto.c - AES-128-GCM encryption
+main/bridge.c - Bridge 1M <-> S8 for clients
+main/id_rotation.c - ID rotation every 10 minutes
+main/uart_config.c - UART commands
 
-## Compilar sin PC (GitHub Actions)
+## Build without PC (GitHub Actions)
 
-El firmware se compila automaticamente en la nube usando GitHub Actions.
+Firmware is compiled automatically in the cloud using GitHub Actions.
 
-1. Sube este repositorio a GitHub.
-2. Cada push a main dispara un build en la pestana Actions.
-3. Espera 3-5 minutos al check verde.
-4. Entra al build completado, baja hasta Artifacts.
-5. Descarga xiaomesh-firmware.zip.
+1. Push this repository to GitHub.
+2. Every push to main triggers a build in the Actions tab.
+3. Wait 3-5 minutes for the green check.
+4. Enter the completed build, scroll to Artifacts.
+5. Download xiaomesh-firmware.zip.
 
-Contiene: bootloader.bin, partition-table.bin, xiaomesh.bin
+Contains: bootloader.bin, partition-table.bin, xiaomesh.bin
 
-## Flashear desde Android
+## Flash from Android
 
-1. Instala ESP32_Flasher desde F-Droid o Play Store.
-2. Conecta la XIAO ESP32-C6 al telefono por cable OTG USB-C.
-3. Flashea en este orden:
+1. Install ESP32_Flasher from F-Droid or Play Store.
+2. Connect XIAO ESP32-C6 to phone via USB-C OTG cable.
+3. Flash in this order:
 
-| Archivo | Offset |
-|---------|--------|
+| File | Offset |
+|------|--------|
 | bootloader.bin | 0x0 |
 | partition-table.bin | 0x8000 |
 | xiaomesh.bin | 0x10000 |
 
-4. Reinicia la placa desconectando y reconectando el cable.
+4. Restart the board by disconnecting and reconnecting the cable.
 
-## Configuracion por BLE (nRF Connect)
+## BLE Configuration (nRF Connect)
 
-Instala nRF Connect for Mobile. Escanea y busca XIAO-MESH.
+Install nRF Connect for Mobile. Scan and look for XIAO-MESH.
 
-Servicio UUID: 0x00FF
+Service UUID: 0x00FF
 
-| Caracteristica | UUID | Permisos | Uso |
-|----------------|------|----------|-----|
-| Config | 0xFF01 | Read + Write | Configurar nodo |
-| Mensajes | 0xFF02 | Write + Notify | Enviar y recibir |
-| OTA | 0xFF03 | Write + Notify | Actualizar firmware |
-| Status | 0xFF04 | Read + Notify | Leer estado |
+| Characteristic | UUID | Permissions | Use |
+|----------------|------|-------------|-----|
+| Config | 0xFF01 | Read + Write | Configure node |
+| Messages | 0xFF02 | Write + Notify | Send and receive |
+| OTA | 0xFF03 | Write + Notify | Update firmware |
+| Status | 0xFF04 | Read + Notify | Read status |
 
-### Comandos de configuracion (escribir en 0xFF01)
+### Config commands (write to 0xFF01)
 
-- [0x01, valor] - Modo PHY: 0x00=Auto, 0x01=1M, 0x02=2M, 0x03=S8
-- [0x02, valor] - Modo nodo: 0x00=Repeater, 0x01=Bridge, 0x02=Room server
-- [0x03, valor] - TX power: -12 a +20 dBm
-- [0x04, 16 bytes] - Clave AES-128 personalizada
+- [0x01, value] - PHY mode: 0x00=Auto, 0x01=1M, 0x02=2M, 0x03=S8
+- [0x02, value] - Node mode: 0x00=Repeater, 0x01=Bridge, 0x02=Room server
+- [0x03, value] - TX power: -12 to +20 dBm
+- [0x04, 16 bytes] - Custom AES-128 key
 
-### Enviar mensaje (escribir en 0xFF02)
+### Send message (write to 0xFF02)
 
-Formato: [texto del mensaje][4 bytes de destino]
+Format: [message text][4 bytes destination]
 
-Si no conoces el destino, usa [0xFF, 0xFF, 0xFF, 0xFF] para broadcast.
+If you don't know the destination, use [0xFF, 0xFF, 0xFF, 0xFF] for broadcast.
 
-### Leer estado (notificacion de 0xFF04)
+### Read status (notification from 0xFF04)
 
-10 bytes: [bateria%, PHY, panel_lo, panel_hi, congestion, ...]
+10 bytes: [battery%, PHY, panel_lo, panel_hi, congestion, ...]
 
-## Configuracion por UART
+## UART Configuration
 
-Conecta la placa por USB y abre terminal serie a 115200 baud.
+Connect the board via USB and open a serial terminal at 115200 baud.
 
-Comandos:
+Commands:
 - set phy auto|1m|2m|s8
 - set mode repeater|bridge|room
 - status
 
-## LED de estado (GPIO15)
+## Status LED (GPIO15)
 
-| Patron | Significado |
-|--------|-------------|
-| Parpadeo muy rapido (5 Hz) | Arrancando |
-| Parpadeo lento (1 Hz) | Buscando malla |
-| Encendido fijo | Conectado a la malla |
-| Doble parpadeo | Retransmitiendo |
-| Triple parpadeo | Bateria baja |
+| Pattern | Meaning |
+|---------|---------|
+| Very fast blink (5 Hz) | Booting |
+| Slow blink (1 Hz) | Searching for mesh |
+| Solid on | Connected to mesh |
+| Double blink | Relaying |
+| Triple blink | Low battery |
 
-## Modo recuperacion
+## Recovery mode
 
-1. Manten GPIO9 a GND al arrancar la placa.
-2. El nodo crea un AP Wi-Fi:
+1. Hold GPIO9 to GND at boot.
+2. The node creates a Wi-Fi AP:
    - SSID: XIAO-MESH-OTA
    - Password: mesh1234
-3. Abre http://192.168.4.1/ota en el navegador.
-4. Sube el .bin del firmware.
-5. El nodo se reinicia con la nueva version.
+3. Open http://192.168.4.1/ota in browser.
+4. Upload the .bin firmware file.
+5. The node reboots with the new version.
 
-La placa NO se bloquea en ningun momento (sin Secure Boot, sin Flash Encryption). Siempre se puede reflashear por USB.
+The board is NEVER locked (no Secure Boot, no Flash Encryption). It can always be reflashed via USB.
 
-## Roles del nodo
+## Node roles
 
-| Rol | Descripcion |
-|-----|-------------|
-| Repeater | Retransmite paquetes de la malla. Sin clientes GATT. |
-| Bridge | Repeater + acepta clientes GATT (iPhone, Android, PC). |
-| Room server | Almacena mensajes para nodos desconectados (buzon). |
+| Role | Description |
+|------|-------------|
+| Repeater | Relays mesh packets. No GATT clients. |
+| Bridge | Repeater + accepts GATT clients (iPhone, Android, PC). |
+| Room server | Stores messages for disconnected nodes (mailbox). |
 
-El modo bridge se activa automaticamente cuando un cliente GATT se conecta.
+Bridge mode activates automatically when a GATT client connects.
 
-## Protocolo (resumen)
+## Protocol (summary)
 
-### Formato de paquete (max 27 bytes en S8)
+### Packet format (max 27 bytes on S8)
 
 [header: 1B][msg_id: 1B][nonce: 12B][path_len: 1B][path: 0-64B][payload_len: 1B][payload: 0-24B]
 
-### Tipos de ruta
+### Route types
 
-- FLOOD: inunda la red para descubrir ruta.
-- DIRECT: usa ruta conocida hacia el destino.
+- FLOOD: floods the network to discover a route.
+- DIRECT: uses a known route to the destination.
 
-### Tipos de payload
+### Payload types
 
-- TXT: mensaje de texto.
-- ACK: confirmacion individual.
-- ACK_CUM: confirmacion acumulativa (bitmap de 32 bits).
-- ADVERT: beacon con bateria.
-- FRAG: fragmento de mensaje largo.
-- BATCH: multiples mensajes cortos agrupados.
-- SOS: mensaje de emergencia (fuerza S8).
+- TXT: text message.
+- ACK: individual acknowledgment.
+- ACK_CUM: cumulative acknowledgment (32-bit bitmap).
+- ADVERT: beacon with battery level.
+- FRAG: fragment of a long message.
+- BATCH: multiple short messages grouped.
+- SOS: emergency message (forces S8).
 
-## Estado del proyecto
+## Project status
 
-| Fase | Contenido | Estado |
-|------|-----------|--------|
-| 1 | Esqueleto + gestion de energia | Completada |
-| 2 | BLE + GATT echo | Completada |
-| 3 | Coded PHY S8 + Extended Advertising | Completada |
-| 4 | Protocolo mesh completo | Completada |
-| 5 | Q-Learning ligero para PHY adaptativo | Pendiente |
-| 6 | Pantalla OLED + app cliente Flutter | Pendiente |
+| Phase | Content | Status |
+|-------|---------|--------|
+| 1 | Skeleton + power management | Complete |
+| 2 | BLE + GATT echo | Complete |
+| 3 | Coded PHY S8 + Extended Advertising | Complete |
+| 4 | Full mesh protocol | Complete |
+| 5 | Light Q-Learning for adaptive PHY | Pending |
+| 6 | OLED display + Flutter client app | Pending |
 
-## Licencia
+## License
 
-GNU General Public License v3.0 o posterior. Ver archivo LICENSE.
+GNU General Public License v3.0 or later. See LICENSE file.
 
-Este programa es software libre. Puedes redistribuirlo y/o modificarlo bajo los terminos de la GPLv3.
+This program is free software. You can redistribute and/or modify it under the terms of the GPLv3.
 
-## Creditos
+## Credits
 
-- Inspirado en Meshtastic, MeshCore y Knit.
-- Construido sobre ESP-IDF 5.3 de Espressif.
-- Cifrado con mbedTLS.
-- Desarrollado en Termux desde Android.
+- Inspired by the ideas of Meshtastic, MeshCore, and Knit.
+- Built on ESP-IDF 5.3 from Espressif.
+- Encryption with mbedTLS.
+- Developed in Termux from Android.
