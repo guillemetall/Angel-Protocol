@@ -108,7 +108,7 @@ static bool frag_cb(uint8_t *data, uint16_t len, uint8_t flags) {
     p.payload_len = len;
     memcpy(p.payload, data, len);
     congestion_marcar_tx(3088);
-    return low_priority_enqueue((uint8_t*)    return low_priority_enqueue((uint8_t*)return low_priority_enqueue((uint8_t*)return ble_emitir((uint8_t*)&p, sizeof(p), phy_actual());p, sizeof(p));p, sizeof(p));p, sizeof(p));
+    return low_priority_enqueue((uint8_t*)&p, sizeof(p));
 }
 void proto_recibir(uint8_t *data, uint16_t len, int8_t rssi) {
     if (len < 8) return;
