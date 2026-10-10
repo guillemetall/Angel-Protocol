@@ -17,7 +17,7 @@ typedef enum { PAYLOAD_TXT, PAYLOAD_ACK, PAYLOAD_ADVERT, PAYLOAD_SOS, PAYLOAD_FR
 #define TTL_MAX 7
 #define PAYLOAD_MAX 20
 #define PATH_MAX 64
-#define FRAG_MAX 8
+#define FRAG_MAX 32
 #define BATCH_MAX 4
 #define BATCH_LEN 4
 #define ROOM_MAX 32

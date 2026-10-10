@@ -2,7 +2,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include <string.h>
-static struct { uint8_t src[4]; uint8_t msg_id; uint8_t total; uint8_t recibidos; uint8_t bitmap; uint8_t buffer[FRAG_MAX * PAYLOAD_MAX]; uint32_t ts; bool activo; } s_ctx[4];
+static struct { uint8_t src[4]; uint8_t msg_id; uint8_t total; uint8_t recibidos; uint32_t bitmap; uint8_t buffer[FRAG_MAX * PAYLOAD_MAX]; uint32_t ts; bool activo; } s_ctx[4];
 static uint8_t s_next_id = 0;
 void frag_init(void) { memset(s_ctx, 0, sizeof(s_ctx)); }
 static int buscar_ctx(uint8_t *src, uint8_t msg_id) {
@@ -46,9 +46,9 @@ bool frag_recibir(uint8_t *src, uint8_t *data, uint16_t len, uint8_t *out, uint1
     int i = buscar_ctx(src, msg_id);
     if (i < 0) i = nuevo_ctx(src, msg_id, total);
     if (i < 0) return false;
-    if (s_ctx[i].bitmap & (1 << idx)) return false;
+    if (s_ctx[i].bitmap & (1u << idx)) return false;
     memcpy(&s_ctx[i].buffer[idx * PAYLOAD_MAX], &data[3], chunk);
-    s_ctx[i].bitmap |= (1 << idx); s_ctx[i].recibidos++;
+    s_ctx[i].bitmap |= (1u << idx); s_ctx[i].recibidos++;
     s_ctx[i].ts = xTaskGetTickCount();
     if (s_ctx[i].recibidos == s_ctx[i].total) {
         uint16_t total_len = (s_ctx[i].total - 1) * PAYLOAD_MAX + chunk;
