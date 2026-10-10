@@ -59,9 +59,6 @@ static void gap_cb(esp_gap_ble_cb_event_t e, esp_ble_gap_cb_param_t *p) {
             if (p->ext_adv_data_set.status == ESP_BT_STATUS_SUCCESS)
                 start_gatt_adv();
             break;
-        case ESP_GAP_BLE_EXT_ADV_START_COMPLETE_EVT:
-            ESP_LOGI(TAG, "Ext Adv iniciado");
-            break;
         case ESP_GAP_BLE_EXT_ADV_REPORT_EVT:
             if (p->ext_adv_report.params.rssi != 0) {
                 proto_recibir(p->ext_adv_report.params.adv_data,
@@ -73,22 +70,25 @@ static void gap_cb(esp_gap_ble_cb_event_t e, esp_ble_gap_cb_param_t *p) {
             esp_ble_gap_start_ext_scan(0, 0);
             break;
         case ESP_GAP_BLE_SEC_REQ_EVT:
-            ESP_LOGI(TAG, "Security request recibida, aceptando");
-            esp_ble_gap_security_rsp(p->ble_security.ble_req.bd_addr, true);
+            if (security_pairing_ventana_abierta()) {
+                ESP_LOGI(TAG, "Security request aceptada");
+                esp_ble_gap_security_rsp(p->ble_security.ble_req.bd_addr, true);
+            } else {
+                ESP_LOGW(TAG, "Security request rechazada (ventana cerrada)");
+                esp_ble_gap_security_rsp(p->ble_security.ble_req.bd_addr, false);
+            }
             break;
         case ESP_GAP_BLE_PASSKEY_NOTIF_EVT:
-            ESP_LOGW(TAG, ">>> PASSKEY para emparejar: %06lu <<<",
-                     (unsigned long)p->ble_security.key_notif.passkey);
+            ESP_LOGW(TAG, ">>> PASSKEY: %06lu <<<", (unsigned long)p->ble_security.key_notif.passkey);
             break;
-        case ESP_GAP_BLE_AUTH_CMPL_EVT: {
+        case ESP_GAP_BLE_AUTH_CMPL_EVT:
             if (p->ble_security.auth_cmpl.success) {
-                ESP_LOGI(TAG, "Emparejamiento exitoso");
+                ESP_LOGI(TAG, "Emparejamiento OK");
                 security_set_addr_auth(p->ble_security.auth_cmpl.bd_addr, true);
             } else {
                 ESP_LOGW(TAG, "Emparejamiento fallido");
             }
             break;
-        }
         default: break;
     }
 }
@@ -111,17 +111,13 @@ void ble_init(void) {
     uint8_t init_key = ESP_BLE_ENC_KEY_MASK | ESP_BLE_ID_KEY_MASK;
     uint8_t rsp_key = ESP_BLE_ENC_KEY_MASK | ESP_BLE_ID_KEY_MASK;
     uint32_t passkey = security_get_passkey();
-    uint8_t auth_option = ESP_BLE_ONLY_ACCEPT_SPECIFIED_AUTH_DISABLE;
-    uint8_t oob_support = ESP_BLE_OOB_DISABLE;
     esp_ble_gap_set_security_param(ESP_BLE_SM_SET_STATIC_PASSKEY, &passkey, sizeof(uint32_t));
     esp_ble_gap_set_security_param(ESP_BLE_SM_AUTHEN_REQ_MODE, &auth_req, sizeof(uint8_t));
     esp_ble_gap_set_security_param(ESP_BLE_SM_IOCAP_MODE, &iocap, sizeof(uint8_t));
     esp_ble_gap_set_security_param(ESP_BLE_SM_MAX_KEY_SIZE, &key_size, sizeof(uint8_t));
-    esp_ble_gap_set_security_param(ESP_BLE_SM_ONLY_ACCEPT_SPECIFIED_SEC_AUTH, &auth_option, sizeof(uint8_t));
-    esp_ble_gap_set_security_param(ESP_BLE_SM_OOB_SUPPORT, &oob_support, sizeof(uint8_t));
     esp_ble_gap_set_security_param(ESP_BLE_SM_SET_INIT_KEY, &init_key, sizeof(uint8_t));
     esp_ble_gap_set_security_param(ESP_BLE_SM_SET_RSP_KEY, &rsp_key, sizeof(uint8_t));
-    ESP_LOGI(TAG, "Seguridad BLE configurada (MITM + SC + Bonding)");
+    ESP_LOGI(TAG, "BLE + SMP configurado (passkey: %06lu)", (unsigned long)passkey);
 }
 bool ble_emitir(uint8_t *data, uint16_t len, uint8_t phy) {
     s_adv_params_mesh.secondary_phy = (phy == 3) ? ESP_BLE_GAP_PHY_CODED : ESP_BLE_GAP_PHY_1M;

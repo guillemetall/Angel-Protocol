@@ -23,10 +23,8 @@ static void led_patron(int modo) {
     int n = (modo == 0) ? 5 : (modo == 1) ? 1 : 2;
     int d = (modo == 0) ? 50 : 100;
     for (int i = 0; i < n; i++) {
-        gpio_set_level(LED_GPIO, 1);
-        vTaskDelay(pdMS_TO_TICKS(d));
-        gpio_set_level(LED_GPIO, 0);
-        vTaskDelay(pdMS_TO_TICKS(d));
+        gpio_set_level(LED_GPIO, 1); vTaskDelay(pdMS_TO_TICKS(d));
+        gpio_set_level(LED_GPIO, 0); vTaskDelay(pdMS_TO_TICKS(d));
     }
 }
 void app_main(void) {

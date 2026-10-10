@@ -74,7 +74,6 @@ static void gatts_cb(esp_gatts_cb_event_t e, esp_gatt_if_t iface, esp_ble_gatts_
             if (s_conn_count < MAX_CONN) {
                 s_conns[s_conn_count++] = p->connect.conn_id;
                 bridge_set_activo(true);
-                security_set_addr_auth(p->connect.remote_bda, false);
             }
             break;
         case ESP_GATTS_DISCONNECT_EVT:
@@ -88,22 +87,23 @@ static void gatts_cb(esp_gatts_cb_event_t e, esp_gatt_if_t iface, esp_ble_gatts_
             uint8_t *v = p->write.value;
             if (h == s_h_cfg && p->write.len >= 2) {
                 if (!security_is_addr_auth(p->write.bda)) {
-                    ESP_LOGW("GATT", "Config rechazada: cliente no autenticado");
+                    ESP_LOGW("GATT", "Config rechazada: no autenticado");
+                } else if (v[0] == 0x04 && p->write.len >= 2 + AES_KEY_LEN) {
+                    crypto_set_key(&v[2]);
                 } else {
                     switch (v[0]) {
                         case 0x01: phy_set_modo((phy_mode_t)v[1]); nvs_guarda(0x01, v[1]); break;
                         case 0x02: proto_set_modo_nodo((node_mode_t)v[1]); nvs_guarda(0x02, v[1]); break;
                         case 0x03: esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_ADV, v[1]); nvs_guarda(0x03, v[1]); break;
-                        case 0x04: if (p->write.len >= 2 + AES_KEY_LEN) crypto_set_key(&v[2]); break;
                     }
                 }
             } else if (h == s_h_msg && p->write.len >= 5) {
                 bridge_iphone_rx(v, p->write.len);
             } else if (h == s_h_ota && p->write.len > 0) {
                 if (!security_is_addr_auth(p->write.bda)) {
-                    ESP_LOGW("GATT", "OTA rechazada: cliente no autenticado");
+                    ESP_LOGW("GATT", "OTA rechazada: no autenticado");
                 } else if (!security_ota_ventana_abierta()) {
-                    ESP_LOGW("GATT", "OTA rechazada: pulsa el boton GPIO9 primero");
+                    ESP_LOGW("GATT", "OTA rechazada: pulsa boton GPIO9");
                 } else {
                     ota_handle_write(v, p->write.len);
                 }
