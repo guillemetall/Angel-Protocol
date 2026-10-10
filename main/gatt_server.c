@@ -5,7 +5,7 @@
 #include "ota_manager.h"
 #include "crypto.h"
 #include "bridge.h"
-#include "ble_manager.h"
+#include "security.h"
 #include "esp_log.h"
 #include "esp_bt.h"
 #include "esp_gatts_api.h"
@@ -74,9 +74,11 @@ static void gatts_cb(esp_gatts_cb_event_t e, esp_gatt_if_t iface, esp_ble_gatts_
             if (s_conn_count < MAX_CONN) {
                 s_conns[s_conn_count++] = p->connect.conn_id;
                 bridge_set_activo(true);
+                security_set_addr_auth(p->connect.remote_bda, false);
             }
             break;
         case ESP_GATTS_DISCONNECT_EVT:
+            security_remove_addr(p->disconnect.remote_bda);
             for (int i = 0; i < s_conn_count; i++)
                 if (s_conns[i] == p->disconnect.conn_id) { s_conns[i] = s_conns[--s_conn_count]; break; }
             if (s_conn_count == 0) bridge_set_activo(false);
@@ -85,16 +87,26 @@ static void gatts_cb(esp_gatts_cb_event_t e, esp_gatt_if_t iface, esp_ble_gatts_
             uint16_t h = p->write.handle;
             uint8_t *v = p->write.value;
             if (h == s_h_cfg && p->write.len >= 2) {
-                switch (v[0]) {
-                    case 0x01: phy_set_modo((phy_mode_t)v[1]); nvs_guarda(0x01, v[1]); break;
-                    case 0x02: proto_set_modo_nodo((node_mode_t)v[1]); nvs_guarda(0x02, v[1]); break;
-                    case 0x03: esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_ADV, v[1]); nvs_guarda(0x03, v[1]); break;
-                    case 0x04: if (p->write.len >= 2 + AES_KEY_LEN) crypto_set_key(&v[2]); break;
+                if (!security_is_addr_auth(p->write.bda)) {
+                    ESP_LOGW("GATT", "Config rechazada: cliente no autenticado");
+                } else {
+                    switch (v[0]) {
+                        case 0x01: phy_set_modo((phy_mode_t)v[1]); nvs_guarda(0x01, v[1]); break;
+                        case 0x02: proto_set_modo_nodo((node_mode_t)v[1]); nvs_guarda(0x02, v[1]); break;
+                        case 0x03: esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_ADV, v[1]); nvs_guarda(0x03, v[1]); break;
+                        case 0x04: if (p->write.len >= 2 + AES_KEY_LEN) crypto_set_key(&v[2]); break;
+                    }
                 }
             } else if (h == s_h_msg && p->write.len >= 5) {
                 bridge_iphone_rx(v, p->write.len);
             } else if (h == s_h_ota && p->write.len > 0) {
-                ota_handle_write(v, p->write.len);
+                if (!security_is_addr_auth(p->write.bda)) {
+                    ESP_LOGW("GATT", "OTA rechazada: cliente no autenticado");
+                } else if (!security_ota_ventana_abierta()) {
+                    ESP_LOGW("GATT", "OTA rechazada: pulsa el boton GPIO9 primero");
+                } else {
+                    ota_handle_write(v, p->write.len);
+                }
             }
             break;
         }

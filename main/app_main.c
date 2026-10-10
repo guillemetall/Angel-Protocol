@@ -9,6 +9,7 @@
 #include "ota_manager.h"
 #include "uart_config.h"
 #include "bridge.h"
+#include "security.h"
 #include "driver/gpio.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -31,11 +32,11 @@ static void led_patron(int modo) {
 void app_main(void) {
     led_init(); led_patron(0);
     ota_modo_recuperacion();
+    security_init();
     power_init();
     crypto_init();
     bridge_init();
     ble_init();
-    gatt_server_init();
     phy_init(PHY_AUTO);
     proto_init();
     ble_scan_start();
@@ -43,6 +44,7 @@ void app_main(void) {
     led_patron(1);
     uint32_t last_status = 0, last_beacon = 0;
     while (1) {
+        security_tick();
         uart_config_tick();
         vTaskDelay(pdMS_TO_TICKS(200));
         uint32_t ahora = xTaskGetTickCount();
