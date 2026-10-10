@@ -10,6 +10,7 @@
 #include "ack_manager.h"
 #include "batch.h"
 #include "congestion.h"
+#include "fragment.h"
 #include "esp_random.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"

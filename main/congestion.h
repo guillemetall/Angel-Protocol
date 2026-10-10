@@ -10,3 +10,5 @@ bool congestion_puede_enviar(void);
 bool congestion_es_urgente(void);
 void congestion_set_urgente(bool u);
 #endif
+void congestion_set_transfiriendo(bool on);
+bool congestion_esta_transfiriendo(void);
