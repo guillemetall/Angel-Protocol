@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
 #include "congestion.h"
 #include "config.h"
 #include "freertos/FreeRTOS.h"
@@ -6,6 +7,7 @@ static uint32_t s_airtime_us = 0;
 static uint32_t s_ventana_inicio = 0;
 static bool s_urgente = false;
 static uint8_t s_nivel = 0;
+static bool s_transfiriendo = false;
 void congestion_init(void) { s_airtime_us = 0; s_ventana_inicio = xTaskGetTickCount(); }
 void congestion_marcar_tx(uint32_t airtime_us) { s_airtime_us += airtime_us; }
 static void actualizar(void) {
@@ -19,11 +21,11 @@ static void actualizar(void) {
     }
 }
 uint8_t congestion_nivel(void) { actualizar(); return s_nivel; }
-bool congestion_puede_enviar(void) { actualizar(); return s_urgente || s_transfiriendo || s_nivel < CONGESTION_UMBRAL; }
+bool congestion_puede_enviar(void) {
+    actualizar();
+    return s_urgente || s_transfiriendo || s_nivel < CONGESTION_UMBRAL;
+}
 bool congestion_es_urgente(void) { return s_urgente; }
 void congestion_set_urgente(bool u) { s_urgente = u; }
-
-static bool s_transfiriendo = false;
-
 void congestion_set_transfiriendo(bool on) { s_transfiriendo = on; }
 bool congestion_esta_transfiriendo(void) { return s_transfiriendo; }
