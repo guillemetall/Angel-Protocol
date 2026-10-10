@@ -11,77 +11,84 @@ Designed for emergencies, remote areas, hiking, sailing, festivals, and any situ
 - 📻 **Extended range**: Coded PHY S8 for up to 500 m per hop.
 - 🛰️ **Works offline**: no internet, no cell towers, no infrastructure.
 - 🔋 **Low power**: solar + LiPo friendly, with deep sleep support.
-- 🔐 **End-to-end encryption**: AES-128-GCM for all messages.
+- 🔐 **Encrypted**: AES-128-GCM for every message.
 - 🕸️ **Self-organizing mesh**: hybrid routing with composite node scoring.
 - 📱 **Works with any phone**: Android, iOS, and PC via BLE GATT.
+- 🔘 **Secure by design**: physical button required for pairing and OTA.
 - 🆓 **Open source**: GPLv3 licensed.
 
-## 🕸️ How the mesh works
+## 🚀 Install the firmware
 
-<details>
-<summary><b>Click to expand</b></summary>
+### Option A — Web installer (desktop only)
 
-Nodes discover each other through Bluetooth Low Energy advertisements. When a message is sent, the originating node uses a **flooding mechanism** to find a route to the destination. Once the route is learned, subsequent messages travel **directly** along it.
+The easiest way for PC users. No software to install.
 
-Each node evaluates its neighbors using a **composite score**:
+**[▶ Install Xiaomesh in your browser](https://guillemetall.github.io/Meshxiaoo-v2/)**
 
-| Weight | Metric |
-|--------|--------|
-| 40% | RSSI (signal strength) |
-| 30% | PDR (packet delivery ratio) |
-| 10% | Battery level |
-| 20% | Hop count |
+> ⚠️ **Requires Chrome or Edge on a desktop computer** (Windows, macOS, Linux). Mobile browsers do not support Web Serial.
 
-The most reliable next hop is chosen at every step. If a link degrades, the score drops and another neighbor takes over automatically.
+### Option B — Mobile (Android)
 
-</details>
+1. Install **ESP32_Flasher** from the Play Store.
+2. Connect the board by USB-C OTG cable.
+3. Download bootloader.bin, partition-table.bin, and xiaomesh.bin from the docs folder.
+4. Flash the three files:
 
-## 📻 Adaptive radio
+| File | Offset |
+|------|--------|
+| bootloader.bin | 0x0 |
+| partition-table.bin | 0x8000 |
+| xiaomesh.bin | 0x10000 |
 
-<details>
-<summary><b>Click to expand</b></summary>
+### Option C — Command line
 
-The firmware automatically switches between Bluetooth LE PHYs based on link quality:
+For advanced users:
 
-| PHY | Range | Throughput | When used |
-|-----|-------|------------|-----------|
-| **1M** | ~100 m | 1 Mbps | Default, efficient |
-| **2M** | ~50 m | 2 Mbps | Very close links |
-| **Coded S8** | **200-500 m** | 125 kbps | Long or weak links |
 
-S8 is used **only when needed**, preserving battery on short links. Long links get the extended range they require.
+## 🔗 Pair with your phone
 
-</details>
+After flashing:
+
+1. Open nRF Connect and scan for XIAO-MESH.
+2. Tap Connect.
+3. Enter passkey 123456.
+4. Press the button (GPIO9) briefly on the board to confirm pairing.
+5. Done.
+
+> 💡 The passkey can be changed by UART before deployment.
 
 ## 🔐 Security
 
-<details>
-<summary><b>Click to expand</b></summary>
+Xiaomesh uses a layered security model designed for devices without a screen.
 
-- **Message encryption**: AES-128-GCM for every payload.
-- **BLE pairing**: passkey + MITM protection required to connect.
+- **BLE pairing**: passkey 123456 + MITM protection.
+- **Physical confirmation**: pairing requires pressing the board button within 60 s.
 - **Authenticated sessions**: only paired devices can change configuration.
-- **OTA gated by physical button**: firmware updates require pressing GPIO9 on the board.
-- **No Secure Boot / Flash Encryption**: the board stays fully reusable.
+- **OTA gate**: firmware updates require holding the button for 3 s.
+- **No Secure Boot / Flash Encryption**: the board stays fully reflashable.
 
-</details>
+## 🕸️ How the mesh works
 
-## 📱 Compatible devices
+Nodes discover each other through BLE advertisements. The first message uses flooding to find a route; subsequent messages travel directly along it.
 
-| Device | Role | Notes |
-|--------|------|-------|
-| **Android** (API 26+) | Full node | BLE 5.0 with Coded PHY required |
-| **iOS** | Client only | Via GATT bridge (CoreBluetooth limitation) |
-| **PC** | Full node or client | Depends on BLE adapter |
-| **XIAO ESP32-C6** | Full node | The reference hardware |
+Each node scores its neighbors on:
 
-## 🎯 Use cases
+| Weight | Metric |
+|--------|--------|
+| 40% | RSSI |
+| 30% | PDR |
+| 10% | Battery level |
+| 20% | Hop count |
 
-- 🚨 Emergency communications when infrastructure fails.
-- 🏔️ Remote areas without cellular coverage.
-- 🥾 Hiking, sailing, and outdoor activities.
-- 🎪 Festivals and large events where cell networks collapse.
-- 🌐 Community mesh networks.
+## 📻 Adaptive radio
+
+| PHY | Range | Throughput | When used |
+|-----|-------|------------|-----------|
+| 1M | ~100 m | 1 Mbps | Default |
+| 2M | ~50 m | 2 Mbps | Very close links |
+| Coded S8 | 200-500 m | 125 kbps | Long or weak links |
+
+S8 is used only when needed, preserving battery on short links.
 
 ## 🛠️ Hardware
 
@@ -90,131 +97,52 @@ S8 is used **only when needed**, preserving battery on short links. Long links g
 | Board | Seeed Studio XIAO ESP32-C6 |
 | Antenna | External U.FL 2.4 GHz |
 | Power | USB-C or LiPo + solar panel |
-| Framework | ESP-IDF 5.3 |
 
-### 🔌 Pinout
+### Pinout
 
 | GPIO | Function |
 |------|----------|
 | GPIO15 | Status LED |
-| GPIO3 | Antenna switch (LOW = enabled) |
-| GPIO14 | Antenna select (HIGH = external) |
-| GPIO9 | Recovery / OTA button |
+| GPIO3 | Antenna switch |
+| GPIO14 | Antenna select |
+| GPIO9 | Pairing / OTA button |
 | GPIO0 | Battery ADC |
 | GPIO1 | Solar panel ADC |
-| GPIO2 | Wakeup GPIO |
-
-### 🏗️ Recommended setup
-
-- XIAO ESP32-C6 + external U.FL antenna.
-- LiPo 2000-5000 mAh + 5-10 W solar panel.
-- Weatherproof enclosure for outdoor nodes.
-- High mounting point for backbone nodes.
-
-## 🚀 Quick start
-
-1. **Download the firmware** from the [Actions tab](https://github.com/guillemetall/Meshxiaoo-v2/actions) (`xiaomesh-firmware.zip`).
-2. **Flash** with [ESP32_Flasher](https://play.google.com/store/apps/details?id=com.espressif.flasher) (Android):
-
-   | File | Offset |
-   |------|--------|
-   | `bootloader.bin` | `0x0` |
-   | `partition-table.bin` | `0x8000` |
-   | `xiaomesh.bin` | `0x10000` |
-
-3. **Pair** with `nRF Connect` — the passkey appears on the serial monitor at first boot.
-4. **Configure** via BLE GATT (service `0x00FF`).
-
-📖 **Compiling from source?** See [BUILD.md](BUILD.md).
 
 ## ⚙️ Configuration
 
-<details>
-<summary><b>BLE GATT</b></summary>
-
-Service UUID: `0x00FF`
+Service UUID: 0x00FF
 
 | Characteristic | UUID | Permissions |
 |----------------|------|-------------|
-| Config | `0xFF01` | Read + Write |
-| Messages | `0xFF02` | Write + Notify |
-| OTA | `0xFF03` | Write + Notify |
-| Status | `0xFF04` | Read + Notify |
+| Config | 0xFF01 | Read + Write (auth) |
+| Messages | 0xFF02 | Write + Notify |
+| OTA | 0xFF03 | Write (button + auth) |
+| Status | 0xFF04 | Read + Notify |
 
-**Config commands** (write to `0xFF01`):
-
-| Bytes | Action |
-|-------|--------|
-| `[0x01, v]` | PHY: 0=auto, 1=1M, 2=2M, 3=S8 |
-| `[0x02, v]` | Mode: 0=repeater, 1=bridge, 2=room |
-| `[0x03, v]` | TX power: -12 to +20 dBm |
-| `[0x04, 16B]` | Custom AES-128 key |
-
-**Send message** (write to `0xFF02`): `[text][4 bytes destination]`
-
-</details>
-
-<details>
-<summary><b>UART commands</b></summary>
-
-Serial at 115200 baud:
-
-cd ~/Meshxiaoo-v2 && cat >> README.md << 'EOF5'
-
-## ⚙️ Configuration
-
-<details>
-<summary><b>BLE GATT</b></summary>
-
-Service UUID: `0x00FF`
-
-| Characteristic | UUID | Permissions |
-|----------------|------|-------------|
-| Config | `0xFF01` | Read + Write |
-| Messages | `0xFF02` | Write + Notify |
-| OTA | `0xFF03` | Write + Notify |
-| Status | `0xFF04` | Read + Notify |
-
-**Config commands** (write to `0xFF01`):
+Config commands (write to 0xFF01):
 
 | Bytes | Action |
 |-------|--------|
-| `[0x01, v]` | PHY: 0=auto, 1=1M, 2=2M, 3=S8 |
-| `[0x02, v]` | Mode: 0=repeater, 1=bridge, 2=room |
-| `[0x03, v]` | TX power: -12 to +20 dBm |
-| `[0x04, 16B]` | Custom AES-128 key |
+| [0x01, v] | PHY: 0=auto, 1=1M, 2=2M, 3=S8 |
+| [0x02, v] | Mode: 0=repeater, 1=bridge, 2=room |
+| [0x03, v] | TX power: -12 to +20 dBm |
+| [0x04, 16B] | Custom AES-128 key |
 
-**Send message** (write to `0xFF02`): `[text][4 bytes destination]`
-
-</details>
-
-<details>
-<summary><b>UART commands</b></summary>
-
-Serial at 115200 baud:
+UART commands (115200 baud):
 
 
-</details>
-
-<details>
-<summary><b>Recovery mode</b></summary>
-
-Hold GPIO9 to GND at boot. The node creates a Wi-Fi AP:
-
-- **SSID**: `XIAO-MESH-OTA`
-- **Password**: `mesh1234`
-- **URL**: `http://192.168.4.1/ota`
-
-Upload the firmware and the node reboots.
-
-</details>
+Recovery mode: hold GPIO9 to GND at boot. Wi-Fi AP:
+- SSID: XIAO-MESH-OTA
+- Password: mesh1234
+- URL: http://192.168.4.1/ota
 
 ## 📶 LED status
 
 | Pattern | Meaning |
 |---------|---------|
-| Fast blink (5 Hz) | Booting |
-| Slow blink (1 Hz) | Searching for mesh |
+| Fast blink | Booting |
+| Slow blink | Searching for mesh |
 | Solid on | Connected |
 | Double blink | Relaying |
 | Triple blink | Low battery |
@@ -223,18 +151,19 @@ Upload the firmware and the node reboots.
 
 **Version: v5.0.0**
 
-| Feature | State |
-|---------|-------|
-| 📻 Coded PHY S8 | ✅ |
-| 📡 Adaptive PHY switching | ✅ |
-| 🕸️ Hybrid mesh routing | ✅ |
-| 🔐 AES-128-GCM encryption | ✅ |
-| 🔑 BLE pairing with MITM | ✅ |
-| ⬆️ OTA with button gating | ✅ |
-| 📱 Multi-connection GATT | ✅ |
-| 🖥️ OLED display | 🔜 Planned |
-| 📲 Flutter client app | 🔜 Planned |
+| Feature | Code | Compiled | Field-tested |
+|---------|------|----------|--------------|
+| Coded PHY S8 | ✅ | ✅ | ⏳ |
+| Adaptive PHY switching | ✅ | ✅ | ⏳ |
+| Hybrid mesh routing | ✅ | ✅ | ⏳ |
+| AES-128-GCM encryption | ✅ | ✅ | ⏳ |
+| BLE pairing with button | ✅ | ✅ | ⏳ |
+| OTA gated by button | ✅ | ✅ | ⏳ |
+| Web installer | ✅ | ✅ | ⏳ |
+
+⏳ = implemented and compiled, pending field validation.
 
 ## 📜 License
 
-GNU General Public License v3.0 or later. See [LICENSE](LICENSE).
+GNU General Public License v3.0 or later. See LICENSE.
+
