@@ -13,6 +13,7 @@ Designed for emergencies, remote areas, hiking, sailing, festivals, and any situ
 - 🔋 **Low power**: solar + LiPo friendly, with deep sleep support.
 - 🔐 **Encrypted**: AES-128-GCM for every message.
 - 🕸️ **Self-organizing mesh**: hybrid routing with composite node scoring.
+- 📨 **Long messages**: up to 640 bytes per message.
 - 📱 **Works with any phone**: Android, iOS, and PC via BLE GATT.
 - 🔘 **Secure by design**: physical button required for pairing and OTA.
 - 🆓 **Open source**: GPLv3 licensed.
@@ -21,18 +22,16 @@ Designed for emergencies, remote areas, hiking, sailing, festivals, and any situ
 
 ### Option A — Web installer (desktop only)
 
-The easiest way for PC users. No software to install.
-
 **[▶ Install Xiaomesh in your browser](https://guillemetall.github.io/Meshxiaoo-v2/)**
 
-> ⚠️ **Requires Chrome or Edge on a desktop computer** (Windows, macOS, Linux). Mobile browsers do not support Web Serial.
+> ⚠️ Requires Chrome or Edge on a desktop computer. Mobile browsers do not support Web Serial.
 
 ### Option B — Mobile (Android)
 
 1. Install **ESP32_Flasher** from the Play Store.
 2. Connect the board by USB-C OTG cable.
 3. Download bootloader.bin, partition-table.bin, and xiaomesh.bin from the docs folder.
-4. Flash the three files:
+4. Flash in this order:
 
 | File | Offset |
 |------|--------|
@@ -42,17 +41,13 @@ The easiest way for PC users. No software to install.
 
 ### Option C — Command line
 
-For advanced users:
-
 
 ## 🔗 Pair with your phone
 
-After flashing:
-
-1. Open nRF Connect and scan for XIAO-MESH.
-2. Tap Connect.
-3. Enter passkey 123456.
-4. Press the button (GPIO9) briefly on the board to confirm pairing.
+1. Open **nRF Connect** and scan for `XIAO-MESH`.
+2. Tap **Connect**.
+3. Enter passkey **`123456`**.
+4. **Press the button (GPIO9) briefly** on the board to confirm.
 5. Done.
 
 > 💡 The passkey can be changed by UART before deployment.
@@ -61,7 +56,7 @@ After flashing:
 
 Xiaomesh uses a layered security model designed for devices without a screen.
 
-- **BLE pairing**: passkey 123456 + MITM protection.
+- **BLE pairing**: passkey + MITM protection.
 - **Physical confirmation**: pairing requires pressing the board button within 60 s.
 - **Authenticated sessions**: only paired devices can change configuration.
 - **OTA gate**: firmware updates require holding the button for 3 s.
@@ -75,8 +70,8 @@ Each node scores its neighbors on:
 
 | Weight | Metric |
 |--------|--------|
-| 40% | RSSI |
-| 30% | PDR |
+| 40% | RSSI (signal strength) |
+| 30% | PDR (packet delivery ratio) |
 | 10% | Battery level |
 | 20% | Hop count |
 
@@ -111,7 +106,7 @@ S8 is used only when needed, preserving battery on short links.
 
 ## ⚙️ Configuration
 
-Service UUID: 0x00FF
+Service UUID: `0x00FF`
 
 | Characteristic | UUID | Permissions |
 |----------------|------|-------------|
@@ -120,7 +115,7 @@ Service UUID: 0x00FF
 | OTA | 0xFF03 | Write (button + auth) |
 | Status | 0xFF04 | Read + Notify |
 
-Config commands (write to 0xFF01):
+### Config commands (write to 0xFF01)
 
 | Bytes | Action |
 |-------|--------|
@@ -129,13 +124,16 @@ Config commands (write to 0xFF01):
 | [0x03, v] | TX power: -12 to +20 dBm |
 | [0x04, 16B] | Custom AES-128 key |
 
-UART commands (115200 baud):
+### UART commands (115200 baud)
 
 
-Recovery mode: hold GPIO9 to GND at boot. Wi-Fi AP:
-- SSID: XIAO-MESH-OTA
-- Password: mesh1234
-- URL: http://192.168.4.1/ota
+### Recovery mode
+
+Hold GPIO9 to GND at boot. The node creates a Wi-Fi AP:
+
+- SSID: `XIAO-MESH-OTA`
+- Password: `mesh1234`
+- URL: `http://192.168.4.1/ota`
 
 ## 📶 LED status
 
@@ -146,22 +144,6 @@ Recovery mode: hold GPIO9 to GND at boot. Wi-Fi AP:
 | Solid on | Connected |
 | Double blink | Relaying |
 | Triple blink | Low battery |
-
-## 📋 Project status
-
-**Version: v5.0.0**
-
-| Feature | Code | Compiled | Field-tested |
-|---------|------|----------|--------------|
-| Coded PHY S8 | ✅ | ✅ | ⏳ |
-| Adaptive PHY switching | ✅ | ✅ | ⏳ |
-| Hybrid mesh routing | ✅ | ✅ | ⏳ |
-| AES-128-GCM encryption | ✅ | ✅ | ⏳ |
-| BLE pairing with button | ✅ | ✅ | ⏳ |
-| OTA gated by button | ✅ | ✅ | ⏳ |
-| Web installer | ✅ | ✅ | ⏳ |
-
-⏳ = implemented and compiled, pending field validation.
 
 ## 📜 License
 
