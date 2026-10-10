@@ -12,6 +12,7 @@
 #include "driver/gpio.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "esp_log.h"
 static const char *TAG = "APP";
 static void led_init(void) {
     gpio_reset_pin(LED_GPIO);
@@ -34,6 +35,7 @@ void app_main(void) {
     crypto_init();
     bridge_init();
     ble_init();
+    gatt_server_init();
     phy_init(PHY_AUTO);
     proto_init();
     ble_scan_start();
@@ -51,6 +53,7 @@ void app_main(void) {
             uint32_t panel = power_panel_mv();
             uint8_t st[10] = { bat, phy_actual(), (uint8_t)(panel & 0xFF), (uint8_t)(panel >> 8), congestion_nivel(), 0,0,0,0,0 };
             gatt_notify_status(st, 10);
+            ESP_LOGI(TAG, "Bat %d%% PHY %d", bat, phy_actual());
             if (bat < BATERIA_BAJA) led_patron(4);
             else if (phy_actual() == 3) led_patron(3);
             else led_patron(2);

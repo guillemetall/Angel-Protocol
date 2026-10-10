@@ -5,6 +5,7 @@
 #include "ota_manager.h"
 #include "crypto.h"
 #include "bridge.h"
+#include "ble_manager.h"
 #include "esp_log.h"
 #include "esp_bt.h"
 #include "esp_gatts_api.h"
@@ -14,7 +15,7 @@
 #include <string.h>
 static uint16_t s_conns[MAX_CONN];
 static uint8_t s_conn_count = 0;
-static uint16_t s_h_cfg, s_h_msg, s_h_ota, s_h_status;
+static uint16_t s_h_svc, s_h_cfg, s_h_msg, s_h_ota, s_h_status;
 static esp_gatt_if_t s_gatts_if = 0;
 static void nvs_guarda(uint8_t cmd, uint8_t val) {
     nvs_handle_t h;
@@ -46,17 +47,20 @@ static void gatts_cb(esp_gatts_cb_event_t e, esp_gatt_if_t iface, esp_ble_gatts_
             }, 8);
             break;
         case ESP_GATTS_CREATE_EVT:
-            s_h_cfg = p->create.service_handle;
-            esp_ble_gatts_start_service(s_h_cfg);
-            esp_ble_gatts_add_char(s_h_cfg, &(esp_bt_uuid_t){.len=2,.uuid={CHR_CFG}},
+            s_h_svc = p->create.service_handle;
+            esp_ble_gatts_start_service(s_h_svc);
+            esp_ble_gatts_add_char(s_h_svc, &(esp_bt_uuid_t){.len=2,.uuid={CHR_CFG}},
                 ESP_GATT_PERM_READ|ESP_GATT_PERM_WRITE,
                 ESP_GATT_CHAR_PROP_BIT_READ|ESP_GATT_CHAR_PROP_BIT_WRITE, NULL, NULL);
-            esp_ble_gatts_add_char(s_h_cfg, &(esp_bt_uuid_t){.len=2,.uuid={CHR_MSG}},
-                ESP_GATT_PERM_WRITE, ESP_GATT_CHAR_PROP_BIT_WRITE|ESP_GATT_CHAR_PROP_BIT_NOTIFY, NULL, NULL);
-            esp_ble_gatts_add_char(s_h_cfg, &(esp_bt_uuid_t){.len=2,.uuid={CHR_OTA}},
-                ESP_GATT_PERM_WRITE, ESP_GATT_CHAR_PROP_BIT_WRITE|ESP_GATT_CHAR_PROP_BIT_NOTIFY, NULL, NULL);
-            esp_ble_gatts_add_char(s_h_cfg, &(esp_bt_uuid_t){.len=2,.uuid={CHR_STATUS}},
-                ESP_GATT_PERM_READ, ESP_GATT_CHAR_PROP_BIT_READ|ESP_GATT_CHAR_PROP_BIT_NOTIFY, NULL, NULL);
+            esp_ble_gatts_add_char(s_h_svc, &(esp_bt_uuid_t){.len=2,.uuid={CHR_MSG}},
+                ESP_GATT_PERM_WRITE,
+                ESP_GATT_CHAR_PROP_BIT_WRITE|ESP_GATT_CHAR_PROP_BIT_NOTIFY, NULL, NULL);
+            esp_ble_gatts_add_char(s_h_svc, &(esp_bt_uuid_t){.len=2,.uuid={CHR_OTA}},
+                ESP_GATT_PERM_WRITE,
+                ESP_GATT_CHAR_PROP_BIT_WRITE|ESP_GATT_CHAR_PROP_BIT_NOTIFY, NULL, NULL);
+            esp_ble_gatts_add_char(s_h_svc, &(esp_bt_uuid_t){.len=2,.uuid={CHR_STATUS}},
+                ESP_GATT_PERM_READ,
+                ESP_GATT_CHAR_PROP_BIT_READ|ESP_GATT_CHAR_PROP_BIT_NOTIFY, NULL, NULL);
             break;
         case ESP_GATTS_ADD_CHAR_EVT: {
             uint16_t u = p->add_char.char_uuid.uuid.uuid16;
@@ -76,8 +80,6 @@ static void gatts_cb(esp_gatts_cb_event_t e, esp_gatt_if_t iface, esp_ble_gatts_
             for (int i = 0; i < s_conn_count; i++)
                 if (s_conns[i] == p->disconnect.conn_id) { s_conns[i] = s_conns[--s_conn_count]; break; }
             if (s_conn_count == 0) bridge_set_activo(false);
-            esp_ble_gap_start_advertising(&(esp_ble_adv_params_t){
-                .adv_int_min=0x20,.adv_int_max=0x40,.adv_type=ADV_TYPE_IND,.channel_map=ADV_CHNL_ALL});
             break;
         case ESP_GATTS_WRITE_EVT: {
             uint16_t h = p->write.handle;
@@ -101,8 +103,7 @@ static void gatts_cb(esp_gatts_cb_event_t e, esp_gatt_if_t iface, esp_ble_gatts_
 }
 void gatt_server_init(void) {
     nvs_flash_init();
-    esp_bt_gatt_register_callback(gatts_cb);
-    esp_bt_gatt_server_register_callback(gatts_cb);
+    esp_ble_gatts_register_callback(gatts_cb);
     esp_ble_gatts_app_register(0);
     gatt_cargar_cfg();
 }
