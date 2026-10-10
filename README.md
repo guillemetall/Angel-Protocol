@@ -1,215 +1,185 @@
-**English** | [Espanol](README.es.md)
+[Espanol](README.es.md) | **English**
 
-# Xiaomesh - Mesh Firmware BLE Coded PHY S8
+# Xiaomesh
 
-Firmware for **Seeed Studio XIAO ESP32-C6** that acts as a node in an offline mesh messaging network. Uses **Bluetooth LE Coded PHY S8** for extended range (200-500 m per hop) without depending on internet, cell towers, Wi-Fi, or LoRa.
+**Offline mesh messaging firmware for the Seeed Studio XIAO ESP32-C6.**
 
-Copyright (C) 2026 guillemetall
-License: GNU General Public License v3.0 or later. See LICENSE file.
+Xiaomesh turns a small, low-power ESP32-C6 board into a node of a decentralized messaging network that works without internet, cell towers, Wi-Fi, or LoRa. It uses Bluetooth LE Coded PHY S8 to reach distances of 200-500 m per hop, and chains multiple nodes together to cover kilometers.
 
-## Features
+Designed for emergencies, remote areas, hiking, sailing, festivals, and any situation where the usual networks fail.
 
-- Coded PHY S8 for extended range (200-500 m per hop).
-- Dual Extended Advertising: connectable instance on 1M PHY (phones) and non-connectable on Coded PHY (mesh).
-- Dual Extended Scanning: simultaneous listening on 1M and Coded PHY S8.
-- Hybrid routing: flooding for route discovery, direct for communication.
-- Composite score (RSSI 40%, PDR 30%, battery 10%, hops 20%).
-- Adaptive PHY switching (1M / 2M / S8) with hysteresis and counters.
-- AES-128-GCM encryption of all payloads with mbedTLS.
-- Fragmentation and reassembly of long messages (up to 8 fragments).
-- FNV-1a deduplication with 32-hash cache.
-- Cumulative ACKs with 32-bit bitmap.
-- Batching of short messages.
-- Room server (mailbox for disconnected nodes).
-- Bridge for iPhone, old Android, or PC without BLE 5.0 adapter.
-- Congestion control by measured airtime.
-- ID rotation every 10 minutes for privacy.
-- OTA with SHA-256 verification (via BLE or Wi-Fi).
-- Recovery mode via GPIO to rescue the board without PC.
-- Solar and battery management with timer or GPIO deep sleep.
+## Highlights
 
-## Hardware
+- **Extended range**: Coded PHY S8 for up to 500 m per hop.
+- **Works offline**: no internet, no cell towers, no infrastructure.
+- **Low power**: solar + LiPo friendly, with deep sleep support.
+- **End-to-end encryption**: AES-128-GCM for all messages.
+- **Self-organizing mesh**: hybrid routing with composite node scoring.
+- **Works with any phone**: Android, iOS, and PC via BLE GATT.
+- **Open source**: GPLv3 licensed.
 
-| Component | Model |
-|-----------|-------|
-| Main board | Seeed Studio XIAO ESP32-C6 |
-| Antenna | External U.FL 2.4 GHz (2.8 dBi or higher) |
-| Power | Solar panel 5-10 W + LiPo battery 2000-5000 mAh |
-| Charging | TP4056 controller or similar |
-| Connection | USB-C cable for programming |
+<details>
+<summary><b>Full description</b></summary>
 
-### Pins used
+### What Xiaomesh is
 
-| GPIO | Function |
-|------|----------|
-| GPIO15 | Blue status LED |
-| GPIO3 | Antenna switch (LOW = enabled) |
-| GPIO14 | Antenna select (HIGH = external U.FL) |
-| GPIO9 | Recovery mode (LOW at boot) |
-| GPIO0 | Battery ADC |
-| GPIO1 | Solar panel ADC |
-| GPIO2 | Wakeup GPIO from deep sleep |
+Xiaomesh is a firmware for the Seeed Studio XIAO ESP32-C6 that converts the board into a self-contained mesh node. Each node can act as a repeater, a bridge for phone clients, or a mailbox for disconnected users.
 
-## Project structure
+### How the mesh works
 
-main/config.h - Constants and configuration
-main/app_main.c - Entry point and main loop
-main/antenna.c - U.FL antenna selection
-main/power_manager.c - Battery/panel ADC + deep sleep
-main/ota_manager.c - OTA via BLE/WiFi + recovery mode
-main/ble_manager.c - Dual advertising and scanning (1M + S8)
-main/gatt_server.c - GATT server (config, messages, OTA, status)
-main/protocol.c - Packet format + routing + neighbor table
-main/phy_manager.c - Adaptive switching 1M / 2M / S8
-main/fragment.c - Fragmentation and reassembly
-main/dedup.c - FNV-1a deduplication
-main/ack_manager.c - Cumulative ACKs
-main/batch.c - Batching of short messages
-main/congestion.c - Airtime control
-main/room.c - Room server (mailbox)
-main/crypto.c - AES-128-GCM encryption
-main/bridge.c - Bridge 1M <-> S8 for clients
-main/id_rotation.c - ID rotation every 10 minutes
-main/uart_config.c - UART commands
+Nodes discover each other through Bluetooth Low Energy advertisements. When a message is sent, the originating node uses a flooding mechanism to find a route to the destination. Once the route is learned, subsequent messages travel directly along it. Each node evaluates its neighbors using a composite score (RSSI, packet delivery ratio, battery level, hop count) and picks the most reliable next hop.
 
-## Build without PC (GitHub Actions)
+### Adaptive radio
 
-Firmware is compiled automatically in the cloud using GitHub Actions.
+The firmware automatically switches between Bluetooth LE PHYs (1M, 2M, and Coded PHY S8) based on link quality. S8 is used only when needed, preserving battery on short links. Long links get the extended range they require.
 
-1. Push this repository to GitHub.
-2. Every push to main triggers a build in the Actions tab.
-3. Wait 3-5 minutes for the green check.
-4. Enter the completed build, scroll to Artifacts.
-5. Download xiaomesh-firmware.zip.
+### Security
 
-Contains: bootloader.bin, partition-table.bin, xiaomesh.bin
+All messages are encrypted with AES-128-GCM. Configuration and OTA are gated behind BLE pairing (passkey + MITM protection) and, for OTA, a physical button. No unauthorized device can reconfigure a node.
 
-## Flash from Android
+### Compatible devices
 
-1. Install ESP32_Flasher from F-Droid or Play Store.
-2. Connect XIAO ESP32-C6 to phone via USB-C OTG cable.
-3. Flash in this order:
+- **Android**: any device with BLE 5.0 and API 26+.
+- **iOS**: via GATT bridge (CoreBluetooth limitation).
+- **PC**: BLE adapter with Coded PHY support, or GATT bridge.
+- **Other XIAO ESP32-C6**: full mesh node.
+
+### Use cases
+
+- Emergency communications when infrastructure fails.
+- Remote areas without cellular coverage.
+- Hiking, sailing, and outdoor activities.
+- Festivals and large events where cell networks collapse.
+- Community mesh networks.
+
+</details>
+
+## Requirements
+
+| Component | Minimum |
+|-----------|---------|
+| Board | Seeed Studio XIAO ESP32-C6 |
+| Antenna | External U.FL 2.4 GHz |
+| Power | USB-C or LiPo + solar panel |
+| Framework | ESP-IDF 5.3 |
+
+## Quick start
+
+### 1. Build without a PC
+
+Firmware is compiled automatically by GitHub Actions when you push to the repository.
+
+- Push to `main`.
+- Wait 3-5 minutes in the **Actions** tab.
+- Download the artifact `xiaomesh-firmware.zip`.
+
+### 2. Flash
+
+Using **ESP32_Flasher** (Android) or **esptool.py** (PC):
 
 | File | Offset |
 |------|--------|
-| bootloader.bin | 0x0 |
-| partition-table.bin | 0x8000 |
-| xiaomesh.bin | 0x10000 |
+| `bootloader.bin` | `0x0` |
+| `partition-table.bin` | `0x8000` |
+| `xiaomesh.bin` | `0x10000` |
 
-4. Restart the board by disconnecting and reconnecting the cable.
+### 3. Configure
 
-## BLE Configuration (nRF Connect)
+Connect to `XIAO-MESH` from **nRF Connect** (or any compatible app).
 
-Install nRF Connect for Mobile. Scan and look for XIAO-MESH.
+- Service UUID: `0x00FF`
+- Config: `0xFF01`
+- Messages: `0xFF02`
+- OTA: `0xFF03`
+- Status: `0xFF04`
 
-Service UUID: 0x00FF
+The first time you power up, note the **passkey** shown on the serial monitor. You will need it to pair.
 
-| Characteristic | UUID | Permissions | Use |
-|----------------|------|-------------|-----|
-| Config | 0xFF01 | Read + Write | Configure node |
-| Messages | 0xFF02 | Write + Notify | Send and receive |
-| OTA | 0xFF03 | Write + Notify | Update firmware |
-| Status | 0xFF04 | Read + Notify | Read status |
-
-### Config commands (write to 0xFF01)
-
-- [0x01, value] - PHY mode: 0x00=Auto, 0x01=1M, 0x02=2M, 0x03=S8
-- [0x02, value] - Node mode: 0x00=Repeater, 0x01=Bridge, 0x02=Room server
-- [0x03, value] - TX power: -12 to +20 dBm
-- [0x04, 16 bytes] - Custom AES-128 key
-
-### Send message (write to 0xFF02)
-
-Format: [message text][4 bytes destination]
-
-If you don't know the destination, use [0xFF, 0xFF, 0xFF, 0xFF] for broadcast.
-
-### Read status (notification from 0xFF04)
-
-10 bytes: [battery%, PHY, panel_lo, panel_hi, congestion, ...]
-
-## UART Configuration
-
-Connect the board via USB and open a serial terminal at 115200 baud.
-
-Commands:
-- set phy auto|1m|2m|s8
-- set mode repeater|bridge|room
-- status
-
-## Status LED (GPIO15)
+### 4. LED status
 
 | Pattern | Meaning |
 |---------|---------|
-| Very fast blink (5 Hz) | Booting |
+| Fast blink (5 Hz) | Booting |
 | Slow blink (1 Hz) | Searching for mesh |
-| Solid on | Connected to mesh |
+| Solid on | Connected |
 | Double blink | Relaying |
 | Triple blink | Low battery |
 
-## Recovery mode
+<details>
+<summary><b>Detailed configuration</b></summary>
 
-1. Hold GPIO9 to GND at boot.
-2. The node creates a Wi-Fi AP:
-   - SSID: XIAO-MESH-OTA
-   - Password: mesh1234
-3. Open http://192.168.4.1/ota in browser.
-4. Upload the .bin firmware file.
-5. The node reboots with the new version.
+### Configuration commands
 
-The board is NEVER locked (no Secure Boot, no Flash Encryption). It can always be reflashed via USB.
+Write to `0xFF01`:
 
-## Node roles
+| Bytes | Action |
+|-------|--------|
+| `[0x01, v]` | PHY: 0=auto, 1=1M, 2=2M, 3=S8 |
+| `[0x02, v]` | Mode: 0=repeater, 1=bridge, 2=room |
+| `[0x03, v]` | TX power: -12 to +20 dBm |
+| `[0x04, 16B]` | Custom AES-128 key |
 
-| Role | Description |
-|------|-------------|
-| Repeater | Relays mesh packets. No GATT clients. |
-| Bridge | Repeater + accepts GATT clients (iPhone, Android, PC). |
-| Room server | Stores messages for disconnected nodes (mailbox). |
+### Sending messages
 
-Bridge mode activates automatically when a GATT client connects.
+Write to `0xFF02`:
 
-## Protocol (summary)
 
-### Packet format (max 27 bytes on S8)
+Use `[0xFF,0xFF,0xFF,0xFF]` for broadcast.
 
-[header: 1B][msg_id: 1B][nonce: 12B][path_len: 1B][path: 0-64B][payload_len: 1B][payload: 0-24B]
+### UART commands
 
-### Route types
+Serial at 115200 baud:
 
-- FLOOD: floods the network to discover a route.
-- DIRECT: uses a known route to the destination.
 
-### Payload types
+### Recovery mode
 
-- TXT: text message.
-- ACK: individual acknowledgment.
-- ACK_CUM: cumulative acknowledgment (32-bit bitmap).
-- ADVERT: beacon with battery level.
-- FRAG: fragment of a long message.
-- BATCH: multiple short messages grouped.
-- SOS: emergency message (forces S8).
+Hold GPIO9 to GND at boot. The node creates a Wi-Fi AP:
 
-## Project status
+- SSID: `XIAO-MESH-OTA`
+- Password: `mesh1234`
+- URL: `http://192.168.4.1/ota`
 
-| Phase | Content | Status |
-|-------|---------|--------|
-| 1 | Skeleton + power management | Complete |
-| 2 | BLE + GATT echo | Complete |
-| 3 | Coded PHY S8 + Extended Advertising | Complete |
-| 4 | Full mesh protocol | Complete |
-| 5 | Light Q-Learning for adaptive PHY | Pending |
-| 6 | OLED display + Flutter client app | Pending |
+Upload the firmware and the node reboots.
+
+</details>
+
+## Hardware
+
+### Wiring
+
+| GPIO | Function |
+|------|----------|
+| GPIO15 | Status LED |
+| GPIO3 | Antenna switch (LOW = enabled) |
+| GPIO14 | Antenna select (HIGH = external) |
+| GPIO9 | Recovery / OTA button |
+| GPIO0 | Battery ADC |
+| GPIO1 | Solar panel ADC |
+| GPIO2 | Wakeup GPIO |
+
+### Recommended setup
+
+- XIAO ESP32-C6 + external U.FL antenna.
+- LiPo 2000-5000 mAh + 5-10 W solar panel.
+- Weatherproof enclosure for outdoor nodes.
+- High mounting point for backbone nodes.
+
+## Status
+
+**Current version: v5.0.0**
+
+| Feature | State |
+|---------|-------|
+| Coded PHY S8 | Done |
+| Adaptive PHY switching | Done |
+| Hybrid mesh routing | Done |
+| AES-128-GCM encryption | Done |
+| BLE pairing with MITM | Done |
+| OTA with button gating | Done |
+| Multi-connection GATT | Done |
+| OLED display | Planned |
+| Flutter client app | Planned |
 
 ## License
 
-GNU General Public License v3.0 or later. See LICENSE file.
-
-This program is free software. You can redistribute and/or modify it under the terms of the GPLv3.
-
-## Credits
-
-- Inspired by the ideas of Meshtastic, MeshCore, and Knit.
-- Built on ESP-IDF 5.3 from Espressif.
-- Encryption with mbedTLS.
-- Developed in Termux from Android.
+GNU General Public License v3.0 or later. See [LICENSE](LICENSE).
