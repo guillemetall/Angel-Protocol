@@ -9,6 +9,7 @@
 #include "ota_manager.h"
 #include "uart_config.h"
 #include "bridge.h"
+#include "low_priority.h"
 #include "security.h"
 #include "driver/gpio.h"
 #include "freertos/FreeRTOS.h"
@@ -31,6 +32,7 @@ void app_main(void) {
     led_init(); led_patron(0);
     ota_modo_recuperacion();
     security_init();
+    low_priority_init();
     power_init();
     crypto_init();
     bridge_init();
@@ -43,6 +45,7 @@ void app_main(void) {
     uint32_t last_status = 0, last_beacon = 0;
     while (1) {
         security_tick();
+        low_priority_tick();
         uart_config_tick();
         vTaskDelay(pdMS_TO_TICKS(200));
         uint32_t ahora = xTaskGetTickCount();
