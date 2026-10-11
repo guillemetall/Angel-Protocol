@@ -14,3 +14,4 @@ bool congestion_esta_transfiriendo(void);
 bool congestion_tiene_token(void);
 void congestion_consumir_token(void);
 uint8_t congestion_tokens_actuales(void);
+#endif
