@@ -120,7 +120,7 @@ void ble_init(void) {
     ESP_LOGI(TAG, "BLE + SMP configurado (passkey: %06lu)", (unsigned long)passkey);
 }
 bool ble_emitir(uint8_t *data, uint16_t len, uint8_t phy) {
-    s_adv_params_mesh.secondary_phy = (phy == 3) ? ESP_BLE_GAP_PHY_CODED : ESP_BLE_GAP_PHY_1M;
+    s_adv_params_mesh.secondary_phy = (phy == 3) ? ESP_BLE_GAP_PHY_CODED : (phy == 2) ? ESP_BLE_GAP_PHY_2M : ESP_BLE_GAP_PHY_1M;
     esp_ble_gap_ext_adv_set_params(ADV_INST_MESH, &s_adv_params_mesh);
     esp_ble_gap_config_ext_adv_data_raw(ADV_INST_MESH, len, data);
     esp_ble_gap_ext_adv_t adv = { .instance = ADV_INST_MESH, .duration = 0, .max_events = 0 };
