@@ -4,7 +4,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include <string.h>
-#define LP_QUEUE_SIZE 8
+#define LP_QUEUE_SIZE 32
 #define LP_MAX_PKT 64
 static struct {
     uint8_t data[LP_MAX_PKT];
