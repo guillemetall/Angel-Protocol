@@ -6,3 +6,4 @@ void gatt_notify_status(uint8_t *data, uint16_t len);
 void gatt_notify_msg(uint8_t *data, uint16_t len);
 void gatt_cargar_cfg(void);
 #endif
+uint8_t gatt_get_conn_count(void);

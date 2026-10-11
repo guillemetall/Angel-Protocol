@@ -18,7 +18,7 @@
 #include <string.h>
 static vecino_t s_vecinos[MAX_VECINOS];
 static uint8_t s_id[4];
-static node_mode_t s_modo = MODE_REPEATER;
+static node_mode_t s_modo = MODE_BRIDGE;
 static uint32_t s_tx = 0, s_rx = 0;
 #define P_RSSI 0.40f
 #define P_PDR 0.30f

@@ -34,7 +34,7 @@ static uint8_t nvs_leer(uint8_t cmd, uint8_t def) {
 }
 void gatt_cargar_cfg(void) {
     phy_set_modo((phy_mode_t)nvs_leer(0x01, PHY_AUTO));
-    proto_set_modo_nodo((node_mode_t)nvs_leer(0x02, MODE_REPEATER));
+    proto_set_modo_nodo((node_mode_t)nvs_leer(0x02, MODE_BRIDGE));
 }
 static void gatts_cb(esp_gatts_cb_event_t e, esp_gatt_if_t iface, esp_ble_gatts_cb_param_t *p) {
     switch (e) {
@@ -127,3 +127,4 @@ void gatt_notify_msg(uint8_t *data, uint16_t len) {
     for (int i = 0; i < s_conn_count; i++)
         esp_ble_gatts_send_indicate(s_gatts_if, s_conns[i], s_h_msg, len, data, false);
 }
+uint8_t gatt_get_conn_count(void) { return s_conn_count; }

@@ -10,6 +10,7 @@
 #include "uart_config.h"
 #include "bridge.h"
 #include "low_priority.h"
+#include "room.h"
 #include "security.h"
 #include "driver/gpio.h"
 #include "freertos/FreeRTOS.h"
@@ -54,7 +55,7 @@ void app_main(void) {
             proto_actualizar();
             uint8_t bat = power_bat_pct();
             uint32_t panel = power_panel_mv();
-            uint8_t st[10] = { bat, phy_actual(), (uint8_t)(panel & 0xFF), (uint8_t)(panel >> 8), congestion_nivel(), 0,0,0,0,0 };
+            uint8_t st[10] = { bat, phy_actual(), (uint8_t)(panel & 0xFF), (uint8_t)(panel >> 8), congestion_nivel(), gatt_get_conn_count(), room_count(), 0, 0, low_priority_count() };
             gatt_notify_status(st, 10);
             ESP_LOGI(TAG, "Bat %d%% PHY %d", bat, phy_actual());
             if (bat < BATERIA_BAJA) led_patron(4);
