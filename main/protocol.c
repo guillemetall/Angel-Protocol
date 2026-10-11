@@ -107,6 +107,8 @@ static bool frag_cb(uint8_t *data, uint16_t len, uint8_t flags) {
     memcpy(p.path, s_id, 4);
     p.payload_len = len;
     memcpy(p.payload, data, len);
+    if (!congestion_tiene_token()) return false;
+    congestion_consumir_token();
     congestion_marcar_tx(3088);
     return low_priority_enqueue((uint8_t*)&p, sizeof(p));
 }
