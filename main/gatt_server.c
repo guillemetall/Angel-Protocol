@@ -6,6 +6,7 @@
 #include "crypto.h"
 #include "bridge.h"
 #include "security.h"
+#include "room.h"
 #include "esp_log.h"
 #include "esp_bt.h"
 #include "esp_gatts_api.h"
@@ -95,6 +96,7 @@ static void gatts_cb(esp_gatts_cb_event_t e, esp_gatt_if_t iface, esp_ble_gatts_
                         case 0x01: phy_set_modo((phy_mode_t)v[1]); nvs_guarda(0x01, v[1]); break;
                         case 0x02: proto_set_modo_nodo((node_mode_t)v[1]); nvs_guarda(0x02, v[1]); break;
                         case 0x03: esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_ADV, v[1]); nvs_guarda(0x03, v[1]); break;
+                    case 0x05: if (p->write.len >= 5) { room_entregar_pendientes(&v[1]); } break;
                     }
                 }
             } else if (h == s_h_msg && p->write.len >= 5) {
