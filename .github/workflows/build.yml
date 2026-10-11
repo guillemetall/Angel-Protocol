@@ -17,7 +17,7 @@ jobs:
           mkdir -p firmware
           cp build/bootloader/bootloader.bin firmware/
           cp build/partition_table/partition-table.bin firmware/
-          cp build/xiaomesh.bin firmware/ 2>/dev/null || cp build/Meshxiaoo-v2.bin firmware/ 2>/dev/null || true
+          cp build/angel.bin firmware/ 2>/dev/null || cp build/Meshxiaoo-v2.bin firmware/ 2>/dev/null || true
       - uses: actions/upload-artifact@v4
         with:
           name: xiaomesh-firmware

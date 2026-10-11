@@ -1,8 +1,8 @@
-# 📡 Xiaomesh
+# 📡 Angel Protocol
 
 **Offline mesh messaging firmware for the Seeed Studio XIAO ESP32-C6.**
 
-Xiaomesh turns a small, low-power ESP32-C6 board into a node of a decentralized messaging network that works without internet, cell towers, Wi-Fi, or LoRa. It uses Bluetooth LE Coded PHY S8 to reach distances of 200-500 m per hop, and chains multiple nodes together to cover kilometers.
+Angel Protocol turns a small, low-power ESP32-C6 board into a node of a decentralized messaging network that works without internet, cell towers, Wi-Fi, or LoRa. It uses Bluetooth LE Coded PHY S8 to reach distances of 200-500 m per hop, and chains multiple nodes together to cover kilometers.
 
 Designed for emergencies, remote areas, hiking, sailing, festivals, and any situation where the usual networks fail.
 
@@ -22,7 +22,7 @@ Designed for emergencies, remote areas, hiking, sailing, festivals, and any situ
 
 ### Option A — Web installer (desktop only)
 
-**[▶ Install Xiaomesh in your browser](https://guillemetall.github.io/Meshxiaoo-v2/)**
+**[▶ Install Angel Protocol in your browser](https://guillemetall.github.io/Angel-Protocol/)**
 
 > ⚠️ Requires Chrome or Edge on a desktop computer. Mobile browsers do not support Web Serial.
 
@@ -30,14 +30,14 @@ Designed for emergencies, remote areas, hiking, sailing, festivals, and any situ
 
 1. Install **ESP32_Flasher** from the Play Store.
 2. Connect the board by USB-C OTG cable.
-3. Download bootloader.bin, partition-table.bin, and xiaomesh.bin from the docs folder.
+3. Download bootloader.bin, partition-table.bin, and angel.bin from the docs folder.
 4. Flash in this order:
 
 | File | Offset |
 |------|--------|
 | bootloader.bin | 0x0 |
 | partition-table.bin | 0x8000 |
-| xiaomesh.bin | 0x10000 |
+| angel.bin | 0x10000 |
 
 ### Option C — Command line
 
@@ -54,7 +54,7 @@ Designed for emergencies, remote areas, hiking, sailing, festivals, and any situ
 
 ## 🔐 Security
 
-Xiaomesh uses a layered security model designed for devices without a screen.
+Angel Protocol uses a layered security model designed for devices without a screen.
 
 - **BLE pairing**: passkey + MITM protection.
 - **Physical confirmation**: pairing requires pressing the board button within 60 s.
