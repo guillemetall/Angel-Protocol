@@ -10,6 +10,7 @@
 #include "ack_manager.h"
 #include "batch.h"
 #include "congestion.h"
+#include "bridge.h"
 #include "low_priority.h"
 #include "fragment.h"
 #include "esp_random.h"
@@ -131,7 +132,7 @@ void proto_recibir(uint8_t *data, uint16_t len, int8_t rssi) {
     int dec_len = crypto_decrypt(p->payload, enc_len, p->nonce);
     if (dec_len < 0) return;
     if (ptype == PAYLOAD_ADVERT) { if (dec_len >= 1 && emisor) upd_bat(emisor, p->payload[0]); return; }
-    if (ptype == PAYLOAD_ACK) { if (emisor) reg_ack(emisor); return; }
+    if (ptype == PAYLOAD_ACK) { if (emisor) reg_ack(emisor); bridge_notify_ack(); return; }
     if (ptype == PAYLOAD_ACK_CUM && dec_len >= 5) {
         ack_recibir_cum(emisor, p->payload[0], p->payload[1] | (p->payload[2]<<8) | (p->payload[3]<<16) | ((uint32_t)p->payload[4]<<24));
         return;
