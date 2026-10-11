@@ -6,4 +6,5 @@ void low_priority_init(void);
 bool low_priority_enqueue(uint8_t *data, uint16_t len);
 void low_priority_tick(void);
 bool low_priority_pending(void);
+void low_priority_set_sos(bool on);
 #endif

@@ -14,6 +14,8 @@ static uint8_t s_head = 0;
 static uint8_t s_tail = 0;
 static uint8_t s_count = 0;
 void low_priority_init(void) {
+static bool s_sos_activo = false;
+void low_priority_set_sos(bool on) { s_sos_activo = on; }
     s_head = s_tail = s_count = 0;
 }
 bool low_priority_enqueue(uint8_t *data, uint16_t len) {
@@ -27,7 +29,7 @@ bool low_priority_enqueue(uint8_t *data, uint16_t len) {
 }
 void low_priority_tick(void) {
     if (s_count == 0) return;
-    if (congestion_nivel() > 50) return;
+    if (s_sos_activo || congestion_nivel() > 50) return;
     ble_emitir(s_queue[s_head].data, s_queue[s_head].len, 3);
     s_head = (s_head + 1) % LP_QUEUE_SIZE;
     s_count--;
