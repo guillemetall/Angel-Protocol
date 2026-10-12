@@ -18,6 +18,7 @@
 #include "freertos/task.h"
 #include <string.h>
 static vecino_t s_vecinos[MAX_VECINOS];
+static uint8_t s_frag_dest[4] = {0};
 static uint8_t s_id[4];
 static node_mode_t s_modo = MODE_BRIDGE;
 static uint32_t s_tx = 0, s_rx = 0;
@@ -106,8 +107,16 @@ static bool frag_cb(uint8_t *data, uint16_t len, uint8_t flags) {
     p.msg_id = (uint8_t)esp_random();
     p.path_len = 4;
     memcpy(p.path, s_id, 4);
-    p.payload_len = len;
-    memcpy(p.payload, data, len);
+
+    uint8_t buf[PAYLOAD_MAX];
+    memcpy(buf, data, len);
+    int enc = crypto_encrypt(buf, len, p.nonce);
+    if (enc < 0) return false;
+    p.payload_len = enc;
+    memcpy(p.payload, buf, enc);
+    memcpy(&p.payload[enc], s_frag_dest, 4);
+    p.payload_len = enc + 4;
+
     if (!congestion_tiene_token()) return false;
     congestion_consumir_token();
     congestion_marcar_tx(3088);
@@ -186,7 +195,8 @@ void proto_recibir(uint8_t *data, uint16_t len, int8_t rssi) {
 bool proto_enviar(uint8_t *dest, uint8_t *txt, uint8_t len) {
     if (!congestion_puede_enviar()) return false;
     if (len <= BATCH_LEN && dest) return batch_add(dest, txt, len);
-    if (len > PAYLOAD_MAX - AES_TAG_LEN) return frag_enviar(dest, txt, len, frag_cb);
+    memcpy(s_frag_dest, dest, 4);
+    return frag_enviar(dest, txt, len, frag_cb);
     vecino_t *next = dest ? elegir_salto(dest) : NULL;
     packet_t p = {0};
     uint8_t route = next ? ROUTE_DIRECT : ROUTE_FLOOD;
