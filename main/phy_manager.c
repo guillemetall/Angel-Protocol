@@ -1,4 +1,5 @@
 #include "phy_manager.h"
+#include "congestion.h"
 #include "esp_bt.h"
 #include "power_manager.h"
 static phy_mode_t s_modo = PHY_AUTO;
@@ -35,9 +36,13 @@ void phy_actualizar_potencia(int8_t rssi) {
 
     if (bat < 30) {
         nueva_potencia = 9;
-    } else if (rssi < -90) {
+    } else if (congestion_es_urgente()) {
         nueva_potencia = 20;
-    } else if (rssi < -80) {
+    } else if (phy_get_modo() == PHY_S8) {
+        nueva_potencia = 20;
+    } else if (rssi < -100) {
+        nueva_potencia = 20;
+    } else if (rssi < -95) {
         nueva_potencia = 15;
     } else {
         nueva_potencia = 9;
