@@ -9,3 +9,4 @@ void phy_actualizar(int8_t rssi, bool recibido);
 uint8_t phy_actual(void);
 #endif
 void phy_actualizar_potencia(int8_t rssi);
+int8_t tx_power_actual(void);

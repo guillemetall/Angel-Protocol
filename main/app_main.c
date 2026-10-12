@@ -55,7 +55,7 @@ void app_main(void) {
             proto_actualizar();
             uint8_t bat = power_bat_pct();
             uint32_t panel = power_panel_mv();
-            uint8_t st[10] = { bat, phy_actual(), (uint8_t)(panel & 0xFF), (uint8_t)(panel >> 8), congestion_nivel(), gatt_get_conn_count(), room_count(), 0, 0, low_priority_count() };
+            uint8_t st[10] = { bat, phy_actual(), (uint8_t)(panel & 0xFF), (uint8_t)(panel >> 8), congestion_nivel(), gatt_get_conn_count(), room_count(), (uint8_t)tx_power_actual(), 0, low_priority_count() };
             gatt_notify_status(st, 10);
             ESP_LOGI(TAG, "Bat %d%% PHY %d", bat, phy_actual());
             if (bat < BATERIA_BAJA) led_patron(4);

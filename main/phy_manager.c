@@ -46,3 +46,7 @@ void phy_actualizar_potencia(int8_t rssi) {
     esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_ADV, nueva_potencia);
     esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, nueva_potencia);
 }
+
+int8_t tx_power_actual(void) {
+    return esp_ble_tx_power_get(ESP_BLE_PWR_TYPE_ADV);
+}
