@@ -8,3 +8,4 @@ uint8_t phy_decidir(int8_t rssi, float pdr, uint8_t hops, bool sos);
 void phy_actualizar(int8_t rssi, bool recibido);
 uint8_t phy_actual(void);
 #endif
+void phy_actualizar_potencia(int8_t rssi);
