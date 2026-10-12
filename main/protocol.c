@@ -1,4 +1,3 @@
-#warning HARDENING_TEST_FLAG
 #include "protocol.h"
 #include "phy_manager.h"
 #include "ble_manager.h"
