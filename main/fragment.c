@@ -42,6 +42,7 @@ bool frag_recibir(uint8_t *src, uint8_t *data, uint16_t len, uint8_t *out, uint1
     if (len < 3) return false;
     uint8_t msg_id = data[0]; uint8_t total = data[1]; uint8_t idx = data[2];
     uint16_t chunk = len - 3;
+    if (chunk > FRAG_CHUNK) return false;   /* fix Bug 6: chunk oversized */
     if (total > FRAG_MAX || idx >= total) return false;
     int i = buscar_ctx(src, msg_id);
     if (i < 0) i = nuevo_ctx(src, msg_id, total);
@@ -52,6 +53,7 @@ bool frag_recibir(uint8_t *src, uint8_t *data, uint16_t len, uint8_t *out, uint1
     s_ctx[i].ts = xTaskGetTickCount();
     if (s_ctx[i].recibidos == s_ctx[i].total) {
         uint16_t total_len = (s_ctx[i].total - 1) * FRAG_CHUNK + chunk;
+        if (total_len > FRAG_MAX * FRAG_CHUNK) return false;   /* fix Bug 6b: cap salida */
         memcpy(out, s_ctx[i].buffer, total_len);
         *out_len = total_len;
         s_ctx[i].activo = false;
