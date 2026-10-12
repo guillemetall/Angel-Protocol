@@ -20,7 +20,7 @@ static esp_ble_gap_ext_adv_params_t s_adv_params_gatt = {
     .primary_phy = ESP_BLE_GAP_PHY_1M,
     .secondary_phy = ESP_BLE_GAP_PHY_1M,
     .own_addr_type = BLE_ADDR_TYPE_RANDOM,
-    .sid = 1, .tx_power = 0,
+    .sid = 1, .tx_power = 9,
 };
 static esp_ble_gap_ext_adv_params_t s_adv_params_mesh = {
     .type = ESP_BLE_GAP_SET_EXT_ADV_PROP_NONCONN_NONSCANNABLE_UNDIRECTED,
@@ -30,7 +30,7 @@ static esp_ble_gap_ext_adv_params_t s_adv_params_mesh = {
     .primary_phy = ESP_BLE_GAP_PHY_CODED,
     .secondary_phy = ESP_BLE_GAP_PHY_CODED,
     .own_addr_type = BLE_ADDR_TYPE_RANDOM,
-    .sid = 0, .tx_power = 0,
+    .sid = 0, .tx_power = 9,
 };
 static esp_ble_ext_scan_params_t s_scan_params = {
     .own_addr_type = BLE_ADDR_TYPE_RANDOM,
