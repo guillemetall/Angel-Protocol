@@ -122,6 +122,7 @@ static bool frag_cb(uint8_t *data, uint16_t len, uint8_t flags) {
     congestion_marcar_tx(3088);
     return low_priority_enqueue((uint8_t*)&p, sizeof(p));
 }
+static uint8_t s_proto_out[FRAG_MAX * PAYLOAD_MAX];  /* fix Bug 5: movido de pila (.stack) a .bss */
 void proto_recibir(uint8_t *data, uint16_t len, int8_t rssi) {
     if (len < 8) return;
     packet_t *p = (packet_t *)data;
@@ -159,9 +160,9 @@ void proto_recibir(uint8_t *data, uint16_t len, int8_t rssi) {
     uint8_t *dest = &p->payload[enc_len];
     if (memcmp(dest, s_id, 4) == 0) {
         if (ptype == PAYLOAD_FRAG) {
-            uint8_t out[FRAG_MAX * PAYLOAD_MAX];
+            /* fix Bug 5: usar s_proto_out */
             uint16_t out_len;
-            if (frag_recibir(emisor, p->payload, dec_len, out, &out_len)) gatt_notify_msg(out, out_len);
+            if (frag_recibir(emisor, p->payload, dec_len, s_proto_out, &out_len)) gatt_notify_msg(s_proto_out, out_len);
         } else {
             gatt_notify_msg(p->payload, dec_len);
         }
